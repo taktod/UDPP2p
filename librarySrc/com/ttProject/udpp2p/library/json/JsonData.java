@@ -21,6 +21,12 @@ public class JsonData {
 	private List<Object> list = null;
 	/**
 	 * コンストラクタ
+	 */
+	public JsonData() {
+		
+	}
+	/**
+	 * コンストラクタ
 	 * @param jsonString
 	 */
 	public JsonData(String jsonString) {
@@ -145,7 +151,7 @@ public class JsonData {
 	 * 配列型のオブジェクトをJson文字列に変換する。
 	 * @return
 	 */
-	public String encodeList() {
+	private String encodeList() {
 		/*
 		 * [135,163,TRUE,"aiueo"]とかにする。
 		 */
@@ -182,7 +188,7 @@ public class JsonData {
 	 * オブジェクト型オブジェクトをJson文字列に変換する。
 	 * @return
 	 */
-	public String encodeMap() {
+	private String encodeMap() {
 		/*
 		 * {"a":123,"b":456,"c":true}
 		 */

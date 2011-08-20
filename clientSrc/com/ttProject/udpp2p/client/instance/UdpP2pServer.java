@@ -5,6 +5,8 @@ import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
+import com.ttProject.udpp2p.library.json.JsonData;
+
 /*
  * DataGramSocketを作成しコネクトを実行、そのコネクトアドレスに対してそとから接続をこころみる感じにしておく。
  * 中央サーバーに接続してシステムとしてつながり続ける。
@@ -63,14 +65,21 @@ public class UdpP2pServer implements Runnable {
 	public void connect() {
 		// conn+適当な文字列をサーバーに送る。
 		// サーバーからhandshake用のトークンを応答してもらう。
-		sendData("conn" + System.currentTimeMillis());
+		JsonData sendData = new JsonData();
+		sendData.put("message", "conn");
+		sendData(sendData);
 	}
 	/**
 	 * IDを指定して接続する。
 	 * @param id 自分のID
 	 */
 	public void connect(Long id) {
-		sendData("conn:" + id);
+		JsonData sendData = new JsonData();
+		sendData.put("message", "conn");
+		if(id != null) {
+			sendData.put("id", id.toString());
+		}
+		sendData(sendData);
 	}
 	/**
 	 * システム接続として立候補する。
@@ -80,7 +89,11 @@ public class UdpP2pServer implements Runnable {
 		if(id == null) {
 			return;
 		}
-		sendData("conn:" + id + ":system");
+		JsonData sendData = new JsonData();
+		sendData.put("message", "conn");
+		sendData.put("id", id.toString());
+		sendData.put("target", "system");
+		sendData(sendData);
 	}
 	/**
 	 * クライアントを指定して接続する。
@@ -91,15 +104,19 @@ public class UdpP2pServer implements Runnable {
 		if(id == null || other == null) {
 			return;
 		}
-		sendData("conn:" + id + ":" + other);
+		JsonData sendData = new JsonData();
+		sendData.put("message", "conn");
+		sendData.put("id", id.toString());
+		sendData.put("target", other.toString());
+		sendData(sendData);
 	}
 	/**
 	 * データを送信する。
 	 * @param data
 	 */
-	private void sendData(String data) {
+	private void sendData(JsonData data) {
 		try {
-			byte[] bytes = data.getBytes();
+			byte[] bytes = data.encode().getBytes();
 			DatagramPacket packet = new DatagramPacket(bytes, bytes.length, server);
 			socket.send(packet);
 		}
@@ -115,7 +132,9 @@ public class UdpP2pServer implements Runnable {
 		if(lastMessageTime < System.currentTimeMillis() - timeout) {
 			return false;
 		}
-		sendData("ping");
+		JsonData sendData = new JsonData();
+		sendData.put("message", "ping");
+		sendData(sendData);
 		return true;
 	}
 	/**
@@ -124,13 +143,13 @@ public class UdpP2pServer implements Runnable {
 	 */
 	public void task(DatagramPacket packet) {
 		lastMessageTime = System.currentTimeMillis();
-		String message = new String(packet.getData());
-		if(message.startsWith("handshake")) {
-			handshakeTask(message);
+		JsonData recvData = new JsonData(new String(packet.getData()));
+		if("handshake".equals(recvData.get("message"))) {
+			handshakeTask(recvData);
 			return;
 		}
-		if(message.startsWith("mode")) {
-			modeTask(message);
+		if("mode".equals(recvData.get("message"))) {
+			modeTask(recvData);
 			return;
 		}
 		System.out.println("soreigai");
@@ -139,19 +158,20 @@ public class UdpP2pServer implements Runnable {
 	 * Handshakeの処理
 	 * @param message
 	 */
-	private void handshakeTask(String message) {
+	private void handshakeTask(JsonData recvData) {
+		JsonData sendData = new JsonData();
 		System.out.println("handshake");
-		String[] data = message.split(":");
-		System.out.println(data[1]);
 		// 与えられたHandshakeTokenをHexに変更して送り返す。
-		sendData("handshake:" + Long.toHexString(Long.parseLong(data[1].trim())));
+		sendData.put("message", "handshake");
+		sendData.put("token", Long.toHexString(Long.parseLong((String)recvData.get("token"))));
+		sendData(sendData);
 	}
 	/**
 	 * サーバーから送られてくる指定状態の応答
 	 * @param message
 	 */
-	private void modeTask(String message) {
-		System.out.println(message);
+	private void modeTask(JsonData recvData) {
+		System.out.println(recvData.encode());
 	}
 	/**
 	 * メッセージ受け取り

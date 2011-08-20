@@ -5,6 +5,8 @@ import java.net.DatagramSocket;
 import java.net.SocketAddress;
 import java.util.Random;
 
+import com.ttProject.udpp2p.library.json.JsonData;
+
 /**
  * 通常のクライアント
  * @author taktod
@@ -62,7 +64,9 @@ public class Client {
 			// 5分たったら強制切断
 			return false;
 		}
-		sendData(socket, "ping");
+		JsonData sendData = new JsonData();
+		sendData.put("message", "ping");
+		sendData(socket, sendData);
 		return true;
 	}
 	/**
@@ -76,58 +80,67 @@ public class Client {
 		if(udpCheck) {
 			lastMessageTime = System.currentTimeMillis();
 		}
-		String message = new String(packet.getData());
-		if(message.startsWith("ping")) {
+		JsonData data = new JsonData(new String(packet.getData()));
+		if("ping".equals(data.get("message"))) {
 			// 命令がpingの場合はこれ以上なにもしない。
 			return;
 		}
 		// TODO この部分はいつかswitchに書き直しておく。
 		// その他の命令の場合・・・
-		if(message.startsWith("conn")) {
+		if("conn".equals(data.get("message"))) {
 			// 接続処理
-			connectionTask(socket, message);
+			connectionTask(socket, data);
 			return;
 		}
-		if(message.startsWith("handshake")) {
+		if("handshake".equals(data.get("message"))) {
 			// Handshake時処理
-			handshakeTask(socket, message);
+			handshakeTask(socket, data);
 			return;
 		}
-		if(message.startsWith("demand")) {
+		if("demand".equals(data.get("message"))) {
 			// 他のクライアントとの接続要求
-			demandTask(socket, message);
+			demandTask(socket, data);
 		}
 		// 該当処理なし。
-		otherTask(socket, message);
+		otherTask(socket, data);
 	}
-	private void otherTask(DatagramSocket socket, String message) {
+	private void otherTask(DatagramSocket socket, JsonData data) {
 		
 	}
-	private void demandTask(DatagramSocket socket, String message) {
+	private void demandTask(DatagramSocket socket, JsonData data) {
 		
 	}
-	private void connectionTask(DatagramSocket socket, String message) {
+	private void connectionTask(DatagramSocket socket, JsonData recvData) {
 		System.out.println("connection...");
-		// conn:(id):(つなぎたい状態　system or 相手のClientID)
+
+		JsonData sendData = new JsonData();
+		recvData.get("id"); // ID指定
+		recvData.get("target"); // 接続先指定
 		// 接続時の動作
 		// Handshakeのキューを送っておく。
 		generateHandshakeToken();
+		sendData.put("message", "handshake");
+		sendData.put("token", handshakeToken.toString());
 		// 送信データを作成し、送る
-		sendData(socket, "handshake:" + handshakeToken.toString());
+		sendData(socket, sendData);
 	}
-	private void handshakeTask(DatagramSocket socket, String message) {
+	private void handshakeTask(DatagramSocket socket, JsonData recvData) {
+		System.out.println("handshakeEvent...");
+		JsonData sendData = new JsonData();
 		// そもそものHandshakeと一致するか確認する。一致しなければ落とす。
 		// 送られてきたHandshakeの値をHex化して一致するか確認する。
 		// 一致したらそのクライアントはUDP接続は可能ということ。
-		System.out.println("handshakeEvent...");
-		String[] data = message.split(":");
+//		String[] data = message.split(":");
+		String token = (String)recvData.get("token");
 //		if(Long.parseLong(data[1].trim(), 16) - handshakeToken == 0) {
-		if(data[1].trim().equals(Long.toHexString(handshakeToken))) {
+//		if(data[1].trim().equals(Long.toHexString(handshakeToken))) {
+		if(token != null && token.equals(Long.toHexString(handshakeToken))) {
 			System.out.println("handshaketoken is ok");
 			// udp動作成功
 			udpCheck = true;
 			// mode情報をおくっておく。
-			sendData(socket, "mode:");
+			sendData.put("message", "mode");
+			sendData(socket, sendData);
 		}
 		else {
 			System.out.println("handshaketoken is ng");
@@ -147,5 +160,8 @@ public class Client {
 		catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+	private void sendData(DatagramSocket socket, JsonData data) {
+		sendData(socket, data.encode());
 	}
 }
