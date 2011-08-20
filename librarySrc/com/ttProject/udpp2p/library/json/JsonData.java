@@ -1,11 +1,9 @@
 package com.ttProject.udpp2p.library.json;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -143,6 +141,10 @@ public class JsonData {
 		}
 		return null;
 	}
+	/**
+	 * 配列型のオブジェクトをJson文字列に変換する。
+	 * @return
+	 */
 	public String encodeList() {
 		/*
 		 * [135,163,TRUE,"aiueo"]とかにする。
@@ -154,7 +156,6 @@ public class JsonData {
 			Object obj = iter.next();
 			if(obj instanceof String) {
 				str.append('"');
-				// stringはエンコードしてやる必要あり。
 				str.append(encodeString((String)obj));
 				str.append('"');
 			}
@@ -168,9 +169,19 @@ public class JsonData {
 		str.append("]");
 		return str.toString();
 	}
+	/**
+	 * 文字列を変換する。
+	 * <pre>まだコンバート処理を書いていない</pre>
+	 * @param data
+	 * @return
+	 */
 	private String encodeString(String data) {
 		return data;
 	}
+	/**
+	 * オブジェクト型オブジェクトをJson文字列に変換する。
+	 * @return
+	 */
 	public String encodeMap() {
 		/*
 		 * {"a":123,"b":456,"c":true}
@@ -227,103 +238,68 @@ public class JsonData {
 		}
 		return null;
 	}
-/*	// Map
-	public boolean containsKey(Object key) {
-		return false;
+	// list系
+	/*
+	 * あとはデータの設定、削除、検索等ができればよい。
+	 */
+	public void add(Object data) {
+		if(list == null) {
+			list = new ArrayList<Object>();
+			map = null;
+		}
+		list.add(data);
 	}
-	public boolean containsValue(Object value) {
-		return false;
-	}
-	public Set<java.util.Map.Entry<String, Object>> entrySet() {
-		return null;
-	}
-	public Object get(Object key) {
-		return null;
-	}
-	public boolean isEmpty() {
-		return false;
-	}
-	public Set<String> keySet() {
-		return null;
-	}
-	public Object put(String key, Object value) {
-		return null;
-	}
-	public void putAll(Map<? extends String, ? extends Object> m) {
-	}
-	public Object remove(Object key) {
-		return null;
-	}
-	public int size() {
-		return 0;
-	}
-	public Collection<Object> values() {
-		return null;
-	}// */
-	// list
-	public boolean add(Object e) {
-		return false;
-	}
-	public void add(int index, Object element) {
-	}
-	public boolean addAll(Collection<? extends Object> c) {
-		return false;
-	}
-	public boolean addAll(int index, Collection<? extends Object> c) {
-		return false;
-	}
-	public boolean contains(Object o) {
-		return false;
-	}
-	public boolean containsAll(Collection<?> c) {
-		return false;
+	public void add(int index, Object data) {
+		if(list == null) {
+			list = new ArrayList<Object>();
+			map = null;
+		}
+		list.add(index, data);
 	}
 	public Object get(int index) {
+		if(list != null) {
+			return list.get(index);
+		}
 		return null;
 	}
-	public int indexOf(Object o) {
-		return 0;
+	public void remove(int index) {
+		if(list != null) {
+			list.remove(index);
+		}
 	}
-	public boolean isEmpty() {
-		return false;
+	public List<Object> getList() {
+		return list;
 	}
-	public Iterator<Object> iterator() {
+	// map系
+	public void put(String key, Object data) {
+		if(map == null) {
+			map = new HashMap<String, Object>();
+			list = null;
+		}
+		map.put(key, data);
+	}
+	public void remove(String key) {
+		if(map != null) {
+			map.remove(key);
+		}
+	}
+	public Object get(String key) {
+		if(map != null) {
+			return map.get(key);
+		}
 		return null;
 	}
-	public int lastIndexOf(Object o) {
-		return 0;
+	public Map<String, Object> getMap() {
+		return map;
 	}
-	public ListIterator<Object> listIterator() {
-		return null;
-	}
-	public ListIterator<Object> listIterator(int index) {
-		return null;
-	}
-	public boolean remove(Object o) {
-		return false;
-	}
-	public Object remove(int index) {
-		return null;
-	}
-	public boolean removeAll(Collection<?> c) {
-		return false;
-	}
-	public boolean retainAll(Collection<?> c) {
-		return false;
-	}
-	public Object set(int index, Object element) {
-		return null;
-	}
+	// 両方
 	public int size() {
+		if(list != null) {
+			return list.size();
+		}
+		if(map != null) {
+			return map.size();
+		}
 		return 0;
-	}
-	public List<Object> subList(int fromIndex, int toIndex) {
-		return null;
-	}
-	public Object[] toArray() {
-		return null;
-	}
-	public <T> T[] toArray(T[] a) {
-		return null;
 	}
 }
