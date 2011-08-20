@@ -81,8 +81,10 @@ public class Client {
 			// 命令がpingの場合はこれ以上なにもしない。
 			return;
 		}
+		// TODO この部分はいつかswitchに書き直しておく。
 		// その他の命令の場合・・・
 		if(message.startsWith("conn")) {
+			// 接続処理
 			connectionTask(socket, message);
 			return;
 		}
@@ -91,6 +93,18 @@ public class Client {
 			handshakeTask(socket, message);
 			return;
 		}
+		if(message.startsWith("demand")) {
+			// 他のクライアントとの接続要求
+			demandTask(socket, message);
+		}
+		// 該当処理なし。
+		otherTask(socket, message);
+	}
+	private void otherTask(DatagramSocket socket, String message) {
+		
+	}
+	private void demandTask(DatagramSocket socket, String message) {
+		
 	}
 	private void connectionTask(DatagramSocket socket, String message) {
 		System.out.println("connection...");
