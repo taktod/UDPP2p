@@ -24,35 +24,5 @@ public class ClientEntry {
 //		ups.connect();
 		UdpP2pServerAdapter adapter = new UdpP2pServerAdapter();
 		adapter.start();
-		// 試しにデータをおくってみる。
-/*		final DatagramSocket socket = new DatagramSocket();
-		socket.send(new DatagramPacket("conn".getBytes(), 0, "conn".getBytes().length, new InetSocketAddress("localhost", 12345)));
-		Thread t = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					Thread.sleep(1000);
-				}
-				catch (Exception e) {
-					// TODO: handle exception
-				}
-				System.out.println("ソケットクローズ");
-				socket.close();
-			}
-		});
-		t.start(); // * /
-		System.out.println("socket待ち開始");
-		try {
-			while(true) {
-				DatagramPacket packet = new DatagramPacket(new byte[1024], 1024);
-				socket.receive(packet);
-				System.out.println(new String(packet.getData()));
-			}
-		}
-		catch (Exception e) {
-			System.out.println(e.getMessage());
-			e.printStackTrace();
-		}// */
-		System.out.println("end");
 	}
 }
