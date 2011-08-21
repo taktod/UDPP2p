@@ -57,7 +57,7 @@ public class Client {
 	 * 接続ターゲット情報設置
 	 * @param targetId
 	 */
-	public void setTartget(Long targetId) {
+	public void setTarget(Long targetId) {
 		target = targetId;
 	}
 	/**
@@ -181,7 +181,17 @@ public class Client {
 			System.out.println("handshaketoken is ok");
 			// udp動作成功
 			udpCheck = true;
-			// mode情報をおくっておく。
+			// クライアントの情報を確定する。
+			ClientManager clientManager = ClientManager.getInstance();
+			clientManager.setupClientMode(this);
+			/*
+			 * targetが-1の場合
+			 * システムクライアントであることをクライアントに送信しておく。
+			 * targetが0の場合
+			 * 適当な接続可能ユーザーがいる場合はその相手と接続しにいく。
+			 * targetが存在する場合
+			 * 対象ユーザーが存在しているか確認、いる場合は接続する。いない場合は待機
+			 */
 			/*
 			 * とりあえず、クライアントIDを送る必要がある。
 			 * システムクライアントが10個以上ある場合はそのままクライアント待機となる。

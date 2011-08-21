@@ -24,8 +24,6 @@ public class ClientManager {
 	private Map<String, Client> waitingClients = null; // つなぎたいClientId -> Client
 	/** 接続ユーザー数カウンター */
 	private Long connectCount = 0L;
-	/** 現状のシステム接続数カウンター(systemClients.size()の方が正確) */
-//	private int systemCount = 0;
 	/** システム接続の最大接続数予定 */
 	private int systemMaxCount = 50;
 	/**
@@ -73,6 +71,10 @@ public class ClientManager {
 		client = new Client(packet, generateId(packet));
 		// あたらしいクライアントIDを付加しておく。
 		clients.put(packetKey, client);
+		connectCount ++;
+		if(connectCount == Long.MAX_VALUE) {
+			connectCount = 0L;
+		}
 		return client;
 	}
 	/**
@@ -109,23 +111,64 @@ public class ClientManager {
 			}
 		}
 		systemClients = nextClients;
+		nextClients = new ConcurrentHashMap<String, Client>();
+		synchronized(waitingClients) {
+			for(Entry<String, Client> entry : waitingClients.entrySet()) {
+				if(entry.getValue().sendPing(socket)) {
+					nextClients.put(entry.getKey(), entry.getValue());
+				}
+			}
+		}
+		waitingClients = nextClients;
 	}
-
 	/**
-	 * 指定クライアントをシステムクライアントに登録しておく。
+	 * クライアントの状態を設定しておく
 	 * @param client
 	 */
-	public void registerSystemClient(Client client) {
-		// アドレスキーのクライアントを削除する。
-		clients.remove(client.getAddressKey());
-		systemClients.put(client.getAddressKey(), client);
-		/*
-		 * システム接続になる方法は、自分のクライアントIDの接続がほかにシステム接続になっていないこと。
-		 */
+	public void setupClientMode(Client client) {
+		// クライアントの割り振りを決定する。
+		Long target = client.getTarget();
+		// このクライアントの設定がない場合は設定を作成する。
+		if(target == null) {
+			// システムクライアントをためしてみる。
+			if(canBeSystemClient(client)) {
+				client.setSystemClient();
+			}
+			else {
+				// 接続待ちクライアントに設定する。
+				client.setTarget(0L);
+			}
+			target = client.getTarget();
+		}
+		if(target == -1L) {
+			// システムクライアントの場合
+			clients.remove(client.getAddressKey());
+			systemClients.put(client.getAddressKey(), client);
+			return;
+		}
+		if(target > 0L) {
+			// 接続先が設定されている場合はqueueに設定しておく。
+			clients.remove(client.getAddressKey());
+			waitingClients.put(target.toString(), client);
+		}
 	}
-	/*
-	 * クライアントと接続する場合
-	 * 接続する相手が特定されていない場合は、clientsのmapにいれてあるユーザーと新しく接続してきたユーザーに接続させる。
-	 * 接続する相手が特定されている場合は、システムクライアントにclientIdのユーザーに接続しにくるように設定しておき、接続がきたらつなぐようにしておく。
+	/**
+	 * システムになれるか確認
+	 * @param client
+	 * @return
 	 */
+	private boolean canBeSystemClient(Client client) {
+		// システムクライアントがすでに最大接続数に達している場合
+		if(systemClients.size() >= systemMaxCount) {
+			return false;
+		}
+		// 同じクライアントからの接続がすでにシステム接続になっているか確認
+		for(Entry<String, Client> element : systemClients.entrySet()) {
+			if(element.getValue().getId() == client.getId()) {
+				return false;
+			}
+		}
+		// どちらでもないのでシステムクライアントになれる。
+		return true;
+	}
 }
