@@ -130,7 +130,6 @@ public class Client {
 		}
 		// 接続
 		if("conn".equals(recvData.get("message"))) {
-			System.out.println(recvData.encode());
 			connectionTask(socket, new ConnectionData(recvData));
 			return;
 		}
@@ -154,10 +153,7 @@ public class Client {
 		
 	}
 	private void connectionTask(DatagramSocket socket, ConnectionData connectionData) {
-		System.out.println("connection...");
-
 		// 接続時にIDがおくられてきている場合はIDを設定しておく。(デフォルトで新規IDが付加されているから、ない場合は新しいIDがついている。)
-		System.out.println(connectionData.encode());
 		if(connectionData.getId() != null) {
 			id = connectionData.getId();
 		}
@@ -176,7 +172,6 @@ public class Client {
 		sendData(socket, handshakeData);
 	}
 	private void handshakeTask(DatagramSocket socket, HandshakeData handshakeData) {
-		System.out.println("handshakeEvent...");
 		JsonData sendData = new JsonData();
 		// そもそものHandshakeと一致するか確認する。一致しなければ落とす。
 		// 送られてきたHandshakeの値をHex化して一致するか確認する。
