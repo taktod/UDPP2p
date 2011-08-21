@@ -183,28 +183,13 @@ public class Client {
 			udpCheck = true;
 			// クライアントの情報を確定する。
 			ClientManager clientManager = ClientManager.getInstance();
-			clientManager.setupClientMode(this);
-			/*
-			 * targetが-1の場合
-			 * システムクライアントであることをクライアントに送信しておく。
-			 * targetが0の場合
-			 * 適当な接続可能ユーザーがいる場合はその相手と接続しにいく。
-			 * targetが存在する場合
-			 * 対象ユーザーが存在しているか確認、いる場合は接続する。いない場合は待機
-			 */
-			/*
-			 * とりあえず、クライアントIDを送る必要がある。
-			 * システムクライアントが10個以上ある場合はそのままクライアント待機となる。
-			 * システムクライアントの数がすくない場合は、この接続をシステムクライアントとして、通常接続用の待機接続を作成する。
-			 * 別の待機接続が存在する場合は、そこと接続させる。(判定するのは、サーバーシステム)
-			 * ClientManagerか？
-			 */
+			clientManager.setupClient(this);
+
 			// ClientManagerに自分がどういう立ち回りを実行するべきか問い合わせる。
 			ModeData modeData = new ModeData();
+			modeData.setId(id);
+			modeData.setTarget(target);
 			sendData(socket, modeData);
-		
-//			System.out.println(localAddress);
-//			System.out.println(address);
 		}
 		else {
 			System.out.println("handshaketoken is ng");

@@ -122,10 +122,57 @@ public class ClientManager {
 		waitingClients = nextClients;
 	}
 	/**
+	 * クライアントの最終設定を実行
+	 * @param client
+	 */
+	public void setupClient(Client client) {
+		// クライアントのモードを設定しておく。
+		setupClientMode(client);
+		Long target = client.getTarget();
+		// システムクライアント
+		if(target == -1) {
+			doSystemClient(client);
+			return;
+		}
+		// 接続先指定クライアント
+		if(target > 0L) {
+			doTargetClient(client);
+			return;
+		}
+		// 一般クライアント
+		if(target == 0L) {
+			doClient(client);
+			return;
+		}
+	}
+	/**
+	 * システム接続の後処理
+	 * @param client
+	 */
+	private void doSystemClient(Client client) {
+		// システムクライアントの場合はクライアントに情報を送り返しておく。
+		// ここでなにかするということはなにもなし。
+	}
+	/**
+	 * 接続先指定の後処理
+	 * @param client
+	 */
+	private void doTargetClient(Client client) {
+		// 接続先をきめているクライアントの場合は、現在のクライアントセットに対象クライアントがあるか確認。
+		// なければシステムクライアントに接続相手から接続にくるように要求をだしておく。
+	}
+	/**
+	 * 一般接続の後処理
+	 * @param client
+	 */
+	private void doClient(Client client) {
+		// 通常クライアントの場合は、適当にみつけたクライアントに接続要求を出す。
+	}
+	/**
 	 * クライアントの状態を設定しておく
 	 * @param client
 	 */
-	public void setupClientMode(Client client) {
+	private void setupClientMode(Client client) {
 		// クライアントの割り振りを決定する。
 		Long target = client.getTarget();
 		// このクライアントの設定がない場合は設定を作成する。
