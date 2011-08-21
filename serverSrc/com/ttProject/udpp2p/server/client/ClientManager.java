@@ -11,19 +11,30 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author taktod
  */
 public class ClientManager {
+	/** クライアントIDを作成するときの種 */
 	private static Long seed = System.currentTimeMillis();
 	/** シングルトンインスタンス */
 	private static ClientManager instance = null;
+
 	/** 待機中の通常クライアント */
 	private Map<String, Client> clients = null;
 	/** 接続中のシステムクライアント */
 	private Map<String, Client> systemClients = null;
+	/** 特定クライアントと接続しようとしているユーザーのデータ */
+	private Map<String, Client> waitingClients = null; // つなぎたいClientId -> Client
+	/** 接続ユーザー数カウンター */
+	private Long connectCount = 0L;
+	/** 現状のシステム接続数カウンター(systemClients.size()の方が正確) */
+//	private int systemCount = 0;
+	/** システム接続の最大接続数予定 */
+	private int systemMaxCount = 50;
 	/**
 	 * コンストラクタ
 	 */
 	private ClientManager() {
 		clients = new ConcurrentHashMap<String, Client>();
 		systemClients = new ConcurrentHashMap<String, Client>();
+		waitingClients = new ConcurrentHashMap<String, Client>();
 	}
 	/**
 	 * シングルトンインスタンス取得
@@ -99,4 +110,19 @@ public class ClientManager {
 		}
 		systemClients = nextClients;
 	}
+
+	/**
+	 * 指定クライアントをシステムクライアントに登録しておく。
+	 * @param client
+	 */
+	public void registerSystemClient(Client client) {
+		// アドレスキーのクライアントを削除する。
+		clients.remove(client.getAddressKey());
+		systemClients.put(client.getAddressKey(), client);
+	}
+	/*
+	 * クライアントと接続する場合
+	 * 接続する相手が特定されていない場合は、clientsのmapにいれてあるユーザーと新しく接続してきたユーザーに接続させる。
+	 * 接続する相手が特定されている場合は、システムクライアントにclientIdのユーザーに接続しにくるように設定しておき、接続がきたらつなぐようにしておく。
+	 */
 }

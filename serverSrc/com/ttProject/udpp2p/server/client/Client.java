@@ -33,7 +33,7 @@ public class Client {
 	/** UDPHolepunching check */
 	private boolean udpHolePunchingCheck = false;
 	/** 接続状態　-1:システム 0:接続待ち Long:接続相手 */
-	private Long type = null;
+	private Long target = null;
 	/**
 	 * コンストラクタ
 	 * @param packet
@@ -45,11 +45,45 @@ public class Client {
 		this.id = id;
 	}
 	/**
+	 * システムクライアントに設定しておく。
+	 */
+	public void setSystemClient() {
+		target = -1L;
+	}
+	/**
+	 * 接続ターゲット情報設置
+	 * @param targetId
+	 */
+	public void setTartget(Long targetId) {
+		target = targetId;
+	}
+	/**
+	 * 接続ターゲット情報取得
+	 * @return
+	 */
+	public Long getTarget() {
+		return target;
+	}
+	/**
 	 * クライアントID
 	 * @return
 	 */
 	public Long getId() {
 		return id;
+	}
+	/**
+	 * アドレス
+	 * @return
+	 */
+	public SocketAddress getAddress() {
+		return address;
+	}
+	/**
+	 * アドレスキー
+	 * @return
+	 */
+	public String getAddressKey() {
+		return address.toString();
 	}
 	/**
 	 * Handshake用のTokenを生成する。
@@ -85,25 +119,26 @@ public class Client {
 			lastMessageTime = System.currentTimeMillis();
 		}
 		JsonData recvData = new JsonData(new String(packet.getData()));
+		// TODO この部分はいつかswitchに書き直しておく。
+		// ping
 		if("ping".equals(recvData.get("message"))) {
-			// 命令がpingの場合はこれ以上なにもしない。
+			// 特にする処理なし
 			return;
 		}
-		// TODO この部分はいつかswitchに書き直しておく。
-		// その他の命令の場合・・・
+		// 接続
 		if("conn".equals(recvData.get("message"))) {
-			// 接続処理
 			connectionTask(socket, new ConnectionData(recvData));
 			return;
 		}
+		// handshake
 		if("handshake".equals(recvData.get("message"))) {
-			// Handshake時処理
 			handshakeTask(socket, new HandshakeData(recvData));
 			return;
 		}
+		// 接続要求
 		if("demand".equals(recvData.get("message"))) {
-			// 他のクライアントとの接続要求
 			demandTask(socket, recvData);
+			return;
 		}
 		// 該当処理なし。
 		otherTask(socket, recvData);
@@ -117,7 +152,10 @@ public class Client {
 	private void connectionTask(DatagramSocket socket, ConnectionData connectionData) {
 		System.out.println("connection...");
 
-		JsonData sendData = new JsonData();
+		// 接続時にIDがおくられてきている場合はIDを設定しておく。(デフォルトで新規IDが付加されているから、ない場合は新しいIDがついている。)
+		if(connectionData.getId() != null) {
+			id = connectionData.getId();
+		}
 		HandshakeData handshakeData = new HandshakeData();
 		// 接続時の動作
 		// Handshakeのキューを送っておく。
@@ -138,6 +176,13 @@ public class Client {
 			// udp動作成功
 			udpCheck = true;
 			// mode情報をおくっておく。
+			/*
+			 * とりあえず、クライアントIDを送る必要がある。
+			 * システムクライアントが10個以上ある場合はそのままクライアント待機となる。
+			 * システムクライアントの数がすくない場合は、この接続をシステムクライアントとして、通常接続用の待機接続を作成する。
+			 * 別の待機接続が存在する場合は、そこと接続させる。(判定するのは、サーバーシステム)
+			 * ClientManagerか？
+			 */
 			ModeData modeData = new ModeData();
 			sendData(socket, modeData);
 		}
@@ -160,6 +205,11 @@ public class Client {
 			e.printStackTrace();
 		}
 	}
+	/**
+	 * データを送信する。
+	 * @param socket
+	 * @param data
+	 */
 	private void sendData(DatagramSocket socket, Data data) {
 		sendData(socket, data.encode());
 	}
