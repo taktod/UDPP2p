@@ -20,6 +20,7 @@ public class UdpP2pServerAdapter implements Server {
 			timer = new TimerEvent(this);
 			timer.start();
 			UdpP2pServer server = new UdpP2pServer(this);
+			server.setLocalDataSend(true);
 			server.connect();
 		}
 		catch (Exception e) {

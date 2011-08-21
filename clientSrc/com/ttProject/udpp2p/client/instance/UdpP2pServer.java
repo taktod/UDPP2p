@@ -2,6 +2,7 @@ package com.ttProject.udpp2p.client.instance;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
@@ -37,6 +38,8 @@ public class UdpP2pServer implements Runnable {
 	private Long lastMessageTime = null;
 	/** ID */
 	private Long id = null;
+	/** ローカルネットワークのデータを送信するかどうか？ */
+	private boolean localDataSend = false;
 	/**
 	 * コンストラクタ
 	 */
@@ -60,6 +63,13 @@ public class UdpP2pServer implements Runnable {
 		super();
 		this.server = server;
 	}
+	/**
+	 * ローカルネットワークの情報を送信するかどうかフラグを設定する。
+	 * @param flg
+	 */
+	public void setLocalDataSend(boolean flg) {
+		localDataSend = flg;
+	}
 	/*
 	 * することは、サーバーに接続する。connを送る。
 	 * 応答データからHandshake用のトークンを送る。
@@ -69,6 +79,7 @@ public class UdpP2pServer implements Runnable {
 	 */
 	public void connect() {
 		ConnectionData connectionData = new ConnectionData();
+		addLocalData(connectionData);
 		sendData(connectionData);
 	}
 	/**
@@ -77,6 +88,7 @@ public class UdpP2pServer implements Runnable {
 	 */
 	public void connect(Long id) {
 		ConnectionData connectionData = new ConnectionData();
+		addLocalData(connectionData);
 		connectionData.setId(id);
 		sendData(connectionData);
 	}
@@ -89,6 +101,7 @@ public class UdpP2pServer implements Runnable {
 			return;
 		}
 		ConnectionData connectionData = new ConnectionData();
+		addLocalData(connectionData);
 		connectionData.setId(id);
 		connectionData.setTarget(-1L);
 		sendData(connectionData);
@@ -103,9 +116,25 @@ public class UdpP2pServer implements Runnable {
 			return;
 		}
 		ConnectionData connectionData = new ConnectionData();
+		addLocalData(connectionData);
 		connectionData.setId(id);
 		connectionData.setTarget(other);
 		sendData(connectionData);
+	}
+	/**
+	 * ローカル接続データを
+	 * @param connectionData
+	 */
+	private void addLocalData(ConnectionData connectionData) {
+		if(localDataSend) {
+			try {
+				connectionData.setLocalAddress(InetAddress.getLocalHost().getHostAddress());
+				connectionData.setLocalPort(socket.getLocalPort());
+				System.out.println(connectionData.encode());
+			}
+			catch (Exception e) {
+			}
+		}
 	}
 	/**
 	 * データを送信する。

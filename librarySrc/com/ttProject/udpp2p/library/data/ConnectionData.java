@@ -26,6 +26,8 @@ public class ConnectionData implements Data {
 	 */
 	public ConnectionData(JsonData data) {
 		this();
+		localAddress = (String)data.get("localAddress");
+		localPort = (Integer)data.get("localPort");
 		if(data.get("id") == null) {
 			return;
 		}
@@ -39,8 +41,6 @@ public class ConnectionData implements Data {
 		else {
 			target = Long.parseLong((String)data.get("target"));
 		}
-		localAddress = (String)data.get("localAddress");
-		localPort = (Integer)data.get("port");
 	}
 	/**
 	 * @return the id

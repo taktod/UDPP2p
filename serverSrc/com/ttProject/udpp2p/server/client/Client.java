@@ -130,6 +130,7 @@ public class Client {
 		}
 		// 接続
 		if("conn".equals(recvData.get("message"))) {
+			System.out.println(recvData.encode());
 			connectionTask(socket, new ConnectionData(recvData));
 			return;
 		}
@@ -156,6 +157,7 @@ public class Client {
 		System.out.println("connection...");
 
 		// 接続時にIDがおくられてきている場合はIDを設定しておく。(デフォルトで新規IDが付加されているから、ない場合は新しいIDがついている。)
+		System.out.println(connectionData.encode());
 		if(connectionData.getId() != null) {
 			id = connectionData.getId();
 		}
@@ -194,6 +196,9 @@ public class Client {
 			 */
 			ModeData modeData = new ModeData();
 			sendData(socket, modeData);
+			
+			System.out.println(localAddress);
+			System.out.println(address);
 		}
 		else {
 			System.out.println("handshaketoken is ng");
