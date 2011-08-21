@@ -14,7 +14,7 @@ public class ConnectionData implements Data {
 	/** ローカルアクセスのためのアドレス(ユーザー判断で送信するデータ) */
 	private String localAddress = null;
 	/** ローカルアクセスのためのポート(ユーザー判断で送信するデータ) */
-	private Integer port = null;
+	private Integer localPort = null;
 	/**
 	 * コンストラクタ
 	 */
@@ -40,7 +40,7 @@ public class ConnectionData implements Data {
 			target = Long.parseLong((String)data.get("target"));
 		}
 		localAddress = (String)data.get("localAddress");
-		port = (Integer)data.get("port");
+		localPort = (Integer)data.get("port");
 	}
 	/**
 	 * @return the id
@@ -81,14 +81,14 @@ public class ConnectionData implements Data {
 	/**
 	 * @return the port
 	 */
-	public Integer getPort() {
-		return port;
+	public Integer getLocalPort() {
+		return localPort;
 	}
 	/**
 	 * @param port the port to set
 	 */
-	public void setPort(Integer port) {
-		this.port = port;
+	public void setLocalPort(Integer port) {
+		this.localPort = port;
 	}
 	/**
 	 * {@inheritDoc}
@@ -108,6 +108,12 @@ public class ConnectionData implements Data {
 			else {
 				data.put("target", target.toString());
 			}
+		}
+		if(localPort != null) {
+			data.put("localPort", localPort);
+		}
+		if(localAddress != null) {
+			data.put("localAddress", localAddress);
 		}
 		return data.encode();
 	}

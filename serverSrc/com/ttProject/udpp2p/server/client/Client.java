@@ -2,6 +2,7 @@ package com.ttProject.udpp2p.server.client;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Random;
 
@@ -22,6 +23,8 @@ public class Client {
 	private final Long timeout = 300000L;
 	/** クライアントのアドレス情報 */
 	private SocketAddress address = null;
+	/** クライアントのローカル側でのアドレス情報(任意) */
+	private SocketAddress localAddress = null;
 	/** 最終メッセージ時刻 */
 	private Long lastMessageTime = null;
 	/** クライアントID */
@@ -155,6 +158,12 @@ public class Client {
 		// 接続時にIDがおくられてきている場合はIDを設定しておく。(デフォルトで新規IDが付加されているから、ない場合は新しいIDがついている。)
 		if(connectionData.getId() != null) {
 			id = connectionData.getId();
+		}
+		if(connectionData.getTarget() != null) {
+			target = connectionData.getTarget();
+		}
+		if(connectionData.getLocalAddress() != null && connectionData.getLocalPort() != null) {
+			localAddress = new InetSocketAddress(connectionData.getLocalAddress(), connectionData.getLocalPort());
 		}
 		HandshakeData handshakeData = new HandshakeData();
 		// 接続時の動作
