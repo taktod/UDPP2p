@@ -119,6 +119,9 @@ public class ClientManager {
 		// アドレスキーのクライアントを削除する。
 		clients.remove(client.getAddressKey());
 		systemClients.put(client.getAddressKey(), client);
+		/*
+		 * システム接続になる方法は、自分のクライアントIDの接続がほかにシステム接続になっていないこと。
+		 */
 	}
 	/*
 	 * クライアントと接続する場合

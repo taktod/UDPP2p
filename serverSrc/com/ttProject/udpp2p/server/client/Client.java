@@ -189,11 +189,12 @@ public class Client {
 			 * 別の待機接続が存在する場合は、そこと接続させる。(判定するのは、サーバーシステム)
 			 * ClientManagerか？
 			 */
+			// ClientManagerに自分がどういう立ち回りを実行するべきか問い合わせる。
 			ModeData modeData = new ModeData();
 			sendData(socket, modeData);
-			
-			System.out.println(localAddress);
-			System.out.println(address);
+		
+//			System.out.println(localAddress);
+//			System.out.println(address);
 		}
 		else {
 			System.out.println("handshaketoken is ng");
