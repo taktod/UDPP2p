@@ -12,6 +12,7 @@ public class PingData implements Data {
 	 * コンストラクタ
 	 */
 	public PingData() {
+		ping = "ping";
 	}
 	/**
 	 * コンストラクタ
