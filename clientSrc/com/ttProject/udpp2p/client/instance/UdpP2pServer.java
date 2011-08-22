@@ -10,6 +10,7 @@ import com.ttProject.udpp2p.library.data.ConnectionData;
 import com.ttProject.udpp2p.library.data.Data;
 import com.ttProject.udpp2p.library.data.HandshakeData;
 import com.ttProject.udpp2p.library.data.ModeData;
+import com.ttProject.udpp2p.library.data.PingData;
 import com.ttProject.udpp2p.library.json.JsonData;
 
 /*
@@ -140,20 +141,6 @@ public class UdpP2pServer implements Runnable {
 	 * データを送信する。
 	 * @param data
 	 */
-	private void sendData(JsonData data) {
-		try {
-			byte[] bytes = data.encode().getBytes();
-			DatagramPacket packet = new DatagramPacket(bytes, bytes.length, server);
-			socket.send(packet);
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-	/**
-	 * データを送信する。
-	 * @param data
-	 */
 	private void sendData(Data data) {
 		try {
 			byte[] bytes = data.encode().getBytes();
@@ -172,9 +159,8 @@ public class UdpP2pServer implements Runnable {
 		if(lastMessageTime < System.currentTimeMillis() - timeout) {
 			return false;
 		}
-		JsonData sendData = new JsonData();
-		sendData.put("message", "ping");
-		sendData(sendData);
+		PingData pingData = new PingData();
+		sendData(pingData);
 		return true;
 	}
 	/**
