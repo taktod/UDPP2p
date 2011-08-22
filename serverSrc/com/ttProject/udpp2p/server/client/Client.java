@@ -130,29 +130,29 @@ public class Client {
 		}
 		// 接続
 		if("conn".equals(recvData.get("message"))) {
-			connectionTask(socket, new ConnectionData(recvData));
+			connectionEvent(socket, new ConnectionData(recvData));
 			return;
 		}
 		// handshake
 		if("handshake".equals(recvData.get("message"))) {
-			handshakeTask(socket, new HandshakeData(recvData));
+			handshakeEvent(socket, new HandshakeData(recvData));
 			return;
 		}
 		// 接続要求
 		if("demand".equals(recvData.get("message"))) {
-			demandTask(socket, recvData);
+			demandEvent(socket, recvData);
 			return;
 		}
 		// 該当処理なし。
-		otherTask(socket, recvData);
+		otherEvent(socket, recvData);
 	}
-	private void otherTask(DatagramSocket socket, JsonData data) {
+	private void otherEvent(DatagramSocket socket, JsonData data) {
 		
 	}
-	private void demandTask(DatagramSocket socket, JsonData data) {
+	private void demandEvent(DatagramSocket socket, JsonData data) {
 		
 	}
-	private void connectionTask(DatagramSocket socket, ConnectionData connectionData) {
+	private void connectionEvent(DatagramSocket socket, ConnectionData connectionData) {
 		// 接続時にIDがおくられてきている場合はIDを設定しておく。(デフォルトで新規IDが付加されているから、ない場合は新しいIDがついている。)
 		if(connectionData.getId() != null) {
 			id = connectionData.getId();
@@ -171,7 +171,7 @@ public class Client {
 		// 送信データを作成し、送る
 		sendData(socket, handshakeData);
 	}
-	private void handshakeTask(DatagramSocket socket, HandshakeData handshakeData) {
+	private void handshakeEvent(DatagramSocket socket, HandshakeData handshakeData) {
 		JsonData sendData = new JsonData();
 		// そもそものHandshakeと一致するか確認する。一致しなければ落とす。
 		// 送られてきたHandshakeの値をHex化して一致するか確認する。

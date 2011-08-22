@@ -181,16 +181,16 @@ public class UdpP2pServer implements Runnable {
 	 * メッセージ取得処理
 	 * @param packet
 	 */
-	public void task(DatagramPacket packet) {
+	public void event(DatagramPacket packet) {
 		lastMessageTime = System.currentTimeMillis();
 		JsonData recvData = new JsonData(new String(packet.getData()));
 		System.out.println(recvData);
 		if("handshake".equals(recvData.get("message"))) {
-			handshakeTask(new HandshakeData(recvData));
+			handshakeEvent(new HandshakeData(recvData));
 			return;
 		}
 		if("mode".equals(recvData.get("message"))) {
-			modeTask(new ModeData(recvData));
+			modeEvent(new ModeData(recvData));
 			return;
 		}
 		System.out.println("soreigai");
@@ -199,7 +199,7 @@ public class UdpP2pServer implements Runnable {
 	 * Handshakeの処理
 	 * @param message
 	 */
-	private void handshakeTask(HandshakeData handshakeData) {
+	private void handshakeEvent(HandshakeData handshakeData) {
 		JsonData sendData = new JsonData();
 		System.out.println("handshake");
 		// 与えられたHandshakeTokenをHexに変更して送り返す。
@@ -210,7 +210,7 @@ public class UdpP2pServer implements Runnable {
 	 * サーバーから送られてくる指定状態の応答
 	 * @param message
 	 */
-	private void modeTask(ModeData modeData) {
+	private void modeEvent(ModeData modeData) {
 		System.out.println(modeData.encode());
 	}
 	/**
@@ -223,7 +223,7 @@ public class UdpP2pServer implements Runnable {
 			while(true) {
 				DatagramPacket packet = new DatagramPacket(new byte[1024], 1024);
 				socket.receive(packet);
-				task(packet);
+				event(packet);
 			}
 		}
 		catch (Exception e) {
