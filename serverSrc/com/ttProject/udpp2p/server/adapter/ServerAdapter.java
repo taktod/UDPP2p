@@ -1,6 +1,7 @@
 package com.ttProject.udpp2p.server.adapter;
 
 import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 
 import com.ttProject.udpp2p.server.client.Client;
 import com.ttProject.udpp2p.server.client.ClientManager;
@@ -42,6 +43,8 @@ public class ServerAdapter {
 			timer.start();
 			socket = new SocketEvent(this);
 			socket.start();
+			ClientManager clientManager = ClientManager.getInstance();
+			clientManager.setAdapter(this);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -53,7 +56,7 @@ public class ServerAdapter {
 	public void scheduledJob() {
 		// ping処理を実行しておく。
 		ClientManager clientManager = ClientManager.getInstance();
-		clientManager.pingJob(socket.getSocket());
+		clientManager.pingJob();
 	}
 	/**
 	 * データを受信した場合の処理
@@ -62,6 +65,9 @@ public class ServerAdapter {
 	public void dataJob(DatagramPacket packet) {
 		ClientManager clientManager = ClientManager.getInstance();
 		Client client = clientManager.getTargetClient(packet);
-		client.receiveMessage(socket.getSocket(), packet);
+		client.receiveMessage(packet);
+	}
+	public DatagramSocket getSocket() {
+		return socket.getSocket();
 	}
 }

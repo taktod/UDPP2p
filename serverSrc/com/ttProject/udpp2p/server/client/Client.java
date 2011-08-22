@@ -107,7 +107,7 @@ public class Client {
 			return false;
 		}
 		PingData pingData = new PingData();
-		sendData(socket, pingData);
+		sendData(pingData);
 		return true;
 	}
 	/**
@@ -115,7 +115,7 @@ public class Client {
 	 * @param socket
 	 * @param packet
 	 */
-	public void receiveMessage(DatagramSocket socket, DatagramPacket packet) {
+	public void receiveMessage(DatagramPacket packet) {
 		// UDPチェック中はhandshakeの応答でしかlastMessageTimeを更新しない。
 		// 最終メッセージ取得時刻を設定しておく。
 		if(udpCheck) {
@@ -130,29 +130,29 @@ public class Client {
 		}
 		// 接続
 		if("conn".equals(recvData.get("message"))) {
-			connectionEvent(socket, new ConnectionData(recvData));
+			connectionEvent(new ConnectionData(recvData));
 			return;
 		}
 		// handshake
 		if("handshake".equals(recvData.get("message"))) {
-			handshakeEvent(socket, new HandshakeData(recvData));
+			handshakeEvent(new HandshakeData(recvData));
 			return;
 		}
 		// 接続要求
 		if("demand".equals(recvData.get("message"))) {
-			demandEvent(socket, recvData);
+			demandEvent(recvData);
 			return;
 		}
 		// 該当処理なし。
-		otherEvent(socket, recvData);
+		otherEvent(recvData);
 	}
-	private void otherEvent(DatagramSocket socket, JsonData data) {
+	private void otherEvent(JsonData data) {
 		
 	}
-	private void demandEvent(DatagramSocket socket, JsonData data) {
+	private void demandEvent(JsonData data) {
 		
 	}
-	private void connectionEvent(DatagramSocket socket, ConnectionData connectionData) {
+	private void connectionEvent(ConnectionData connectionData) {
 		// 接続時にIDがおくられてきている場合はIDを設定しておく。(デフォルトで新規IDが付加されているから、ない場合は新しいIDがついている。)
 		if(connectionData.getId() != null) {
 			id = connectionData.getId();
@@ -163,15 +163,18 @@ public class Client {
 		if(connectionData.getLocalAddress() != null && connectionData.getLocalPort() != null) {
 			localAddress = new InetSocketAddress(connectionData.getLocalAddress(), connectionData.getLocalPort());
 		}
+		sendHandshake();
+	}
+	private void sendHandshake() {
 		HandshakeData handshakeData = new HandshakeData();
 		// 接続時の動作
 		// Handshakeのキューを送っておく。
 		generateHandshakeToken();
 		handshakeData.setToken(handshakeToken);
 		// 送信データを作成し、送る
-		sendData(socket, handshakeData);
+		sendData(handshakeData);
 	}
-	private void handshakeEvent(DatagramSocket socket, HandshakeData handshakeData) {
+	private void handshakeEvent(HandshakeData handshakeData) {
 		JsonData sendData = new JsonData();
 		// そもそものHandshakeと一致するか確認する。一致しなければ落とす。
 		// 送られてきたHandshakeの値をHex化して一致するか確認する。
@@ -184,27 +187,29 @@ public class Client {
 			// クライアントの情報を確定する。
 			ClientManager clientManager = ClientManager.getInstance();
 			clientManager.setupClient(this);
-
-			// ClientManagerに自分がどういう立ち回りを実行するべきか問い合わせる。
-			ModeData modeData = new ModeData();
-			modeData.setId(id);
-			modeData.setTarget(target);
-			sendData(socket, modeData);
 		}
 		else {
 			System.out.println("handshaketoken is ng");
 		}
+	}
+	public void sendMode() {
+		// ClientManagerに自分がどういう立ち回りを実行するべきか問い合わせる。
+		ModeData modeData = new ModeData();
+		modeData.setId(id);
+		modeData.setTarget(target);
+		sendData(modeData);
 	}
 	/**
 	 * データを送信する。
 	 * @param socket
 	 * @param data
 	 */
-	private void sendData(DatagramSocket socket, String data) {
+	private void sendData(String data) {
 		try {
 			byte[] bytes = data.getBytes();
 			DatagramPacket packet = new DatagramPacket(bytes, bytes.length, address);
-			socket.send(packet);
+			ClientManager clientManager = ClientManager.getInstance();
+			clientManager.getSocket().send(packet);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -215,7 +220,7 @@ public class Client {
 	 * @param socket
 	 * @param data
 	 */
-	private void sendData(DatagramSocket socket, Data data) {
-		sendData(socket, data.encode());
+	private void sendData(Data data) {
+		sendData(data.encode());
 	}
 }

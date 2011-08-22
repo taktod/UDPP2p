@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.ttProject.udpp2p.server.adapter.ServerAdapter;
+
 /**
  * クライアントを管理
  * @author taktod
@@ -26,6 +28,8 @@ public class ClientManager {
 	private Long connectCount = 0L;
 	/** システム接続の最大接続数予定 */
 	private int systemMaxCount = 50;
+	/** アダプターオブジェクト */
+	private ServerAdapter adapter;
 	/**
 	 * コンストラクタ
 	 */
@@ -43,6 +47,16 @@ public class ClientManager {
 			instance = new ClientManager();
 		}
 		return instance;
+	}
+	/**
+	 * adapter設定
+	 * @param adapter
+	 */
+	public void setAdapter(ServerAdapter adapter) {
+		this.adapter = adapter;
+	}
+	public DatagramSocket getSocket() {
+		return adapter.getSocket();
 	}
 	/**
 	 * 処理主体のクライアントインスタンスを取得する
@@ -89,13 +103,13 @@ public class ClientManager {
 	 * pingの送信を実行する処理
 	 * @param socket
 	 */
-	public void pingJob(DatagramSocket socket) {
+	public void pingJob() {
 		// 通常クライアント
 		Map<String, Client> nextClients = new ConcurrentHashMap<String, Client>();
 		synchronized(clients) {
 			// pingの処理
 			for(Entry<String, Client> entry : clients.entrySet()) {
-				if(entry.getValue().sendPing(socket)) {
+				if(entry.getValue().sendPing(adapter.getSocket())) {
 					nextClients.put(entry.getKey(), entry.getValue());
 				}
 			}
@@ -105,7 +119,7 @@ public class ClientManager {
 		nextClients = new ConcurrentHashMap<String, Client>();
 		synchronized (systemClients) {
 			for(Entry<String, Client> entry : systemClients.entrySet()) {
-				if(entry.getValue().sendPing(socket)) {
+				if(entry.getValue().sendPing(adapter.getSocket())) {
 					nextClients.put(entry.getKey(), entry.getValue());
 				}
 			}
@@ -114,7 +128,7 @@ public class ClientManager {
 		nextClients = new ConcurrentHashMap<String, Client>();
 		synchronized(waitingClients) {
 			for(Entry<String, Client> entry : waitingClients.entrySet()) {
-				if(entry.getValue().sendPing(socket)) {
+				if(entry.getValue().sendPing(adapter.getSocket())) {
 					nextClients.put(entry.getKey(), entry.getValue());
 				}
 			}
@@ -152,6 +166,7 @@ public class ClientManager {
 	private void doSystemClient(Client client) {
 		// システムクライアントの場合はクライアントに情報を送り返しておく。
 		// ここでなにかするということはなにもなし。
+		client.sendMode();
 	}
 	/**
 	 * 接続先指定の後処理
@@ -159,6 +174,8 @@ public class ClientManager {
 	 */
 	private void doTargetClient(Client client) {
 		// 接続先をきめているクライアントの場合は、現在のクライアントセットに対象クライアントがあるか確認。
+		// clientsに自分がつなごうとしているユーザーがいるか確認する。
+		// なければ自分をwaitingにいれて、システムクライアントにデータを要求する。
 		// なければシステムクライアントに接続相手から接続にくるように要求をだしておく。
 	}
 	/**
