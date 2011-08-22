@@ -174,9 +174,33 @@ public class ClientManager {
 	 */
 	private void doTargetClient(Client client) {
 		// 接続先をきめているクライアントの場合は、現在のクライアントセットに対象クライアントがあるか確認。
+		String key = null;
+		Client target = waitingClients.get(client.getId().toString());
+		if(target.getId() == client.getTarget()) {
+			// 自分とつなごうとしてる相手が自分がつなぎたい相手の場合
+			// みつけた相手とつながる。
+			return;
+		}
 		// clientsに自分がつなごうとしているユーザーがいるか確認する。
+		for(Entry<String, Client> entry : clients.entrySet()) {
+			if(entry.getValue().getId() == client.getTarget()) {
+				// 相手がみつかった。
+				key = entry.getKey();
+				break;
+			}
+		}
+		if(key != null) {
+			// 相手が見つかった場合
+			target = clients.remove(key);
+			// targetとやり取りする。
+			return;
+		}
 		// なければ自分をwaitingにいれて、システムクライアントにデータを要求する。
+		waitingClients.put(client.getTarget().toString(), client);
 		// なければシステムクライアントに接続相手から接続にくるように要求をだしておく。
+		// システムクライアントにデータを送り、対象クライアントが接続しにくるように促す。
+		
+		// なお、システムメッセージやりとり動作をする上で接続先ユーザーを指定されてもあまり意味がない。(アプリケションレベルでは意味があると思うけど。)
 	}
 	/**
 	 * 一般接続の後処理

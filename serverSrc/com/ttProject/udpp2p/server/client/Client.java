@@ -37,6 +37,11 @@ public class Client {
 	private boolean udpHolePunchingCheck = false;
 	/** 接続状態　-1:システム 0:接続待ち Long:接続相手 */
 	private Long target = null;
+	// 自分がすでに接続済みクライアントデータを送る必要がある。
+	/*
+	 * 先にサーバーに接続ずみクライアント情報をおくった方がいいのか、接続をとりあえず試させて、クライアントごとに、接続済みであるか確認させた方がいいのか・・・
+	 * 考える必要がある。
+	 */
 	/**
 	 * コンストラクタ
 	 * @param packet
