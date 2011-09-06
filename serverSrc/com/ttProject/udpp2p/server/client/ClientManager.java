@@ -20,9 +20,9 @@ public class ClientManager {
 	private static ClientManager instance = null;
 
 	/** 待機中の通常クライアント */
-	private Map<String, Client> clients = null;
+	private Map<String, Client> clients = null; // 接続に利用したパケットキー -> Client
 	/** 接続中のシステムクライアント */
-	private Map<String, Client> systemClients = null;
+	private Map<String, Client> systemClients = null; // 接続に利用したパケットキー -> Client
 	/** 特定クライアントと接続しようとしているユーザーのデータ */
 	private Map<String, Client> waitingClients = null; // つなぎたいClientId -> Client
 	/** 接続ユーザー数カウンター */
