@@ -219,13 +219,13 @@ public class ClientManager {
 			DatagramPacket packet = new DatagramPacket("test".getBytes(), "test".length(), new InetSocketAddress("google.com", 1935));
 			Client client = new Client(packet, 1L);
 			String packetKey = packet.getSocketAddress().toString();
-			final String hogehoge = packetKey;
 			clients.put(packetKey, client);
 			System.out.println(clients);
 			
 			packet = new DatagramPacket("test".getBytes(), "test".length(), new InetSocketAddress("yahoo.com", 1353));
 			client = new Client(packet, 2L);
 			packetKey = packet.getSocketAddress().toString();
+			final String hogehoge = packetKey;
 			clients.put(packetKey, client);
 			System.out.println(clients);
 
@@ -235,21 +235,21 @@ public class ClientManager {
 			clients.put(packetKey, client);
 			System.out.println(clients);
 			synchronized (clients) {
-				for(Entry<String, Client> entry : clients.entrySet()) {
-					clients.remove(entry.getKey());
-					break;
-				}
 				new Thread(new Runnable() {
 					@Override
 					public void run() {
 						// synchronizedは互いについているところでのみ有用になるっぽい。
-						synchronized(clients) {
+//						synchronized(clients) {
 							System.out.println("test start");
 							clients.remove(hogehoge);
 							System.out.println("test end");
-						}
+//						}
 					}
 				}).start();
+				for(Entry<String, Client> entry : clients.entrySet()) {
+					clients.remove(entry.getKey());
+					break;
+				}
 				try {
 					System.out.println("sleep start");
 					Thread.sleep(1000L);
