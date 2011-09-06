@@ -99,7 +99,7 @@ public class Client {
 	private void generateHandshakeToken() {
 		Random randam = new Random(System.currentTimeMillis());
 		handshakeToken = randam.nextLong();
-		handshakeToken = handshakeToken < 0 ? -handshakeToken : handshakeToken;
+		handshakeToken = (handshakeToken < 0 ? -handshakeToken : handshakeToken);
 	}
 	/**
 	 * pingを送信する。
@@ -151,12 +151,24 @@ public class Client {
 		// 該当処理なし。
 		otherEvent(recvData);
 	}
+	/**
+	 * その他のイベント
+	 * @param data
+	 */
 	private void otherEvent(JsonData data) {
 		
 	}
+	/**
+	 * クライアントから接続の要求をうけとったときの動作
+	 * @param data
+	 */
 	private void demandEvent(JsonData data) {
 		
 	}
+	/**
+	 * 接続イベント
+	 * @param connectionData
+	 */
 	private void connectionEvent(ConnectionData connectionData) {
 		// 接続時にIDがおくられてきている場合はIDを設定しておく。(デフォルトで新規IDが付加されているから、ない場合は新しいIDがついている。)
 		if(connectionData.getId() != null) {
@@ -170,6 +182,9 @@ public class Client {
 		}
 		sendHandshake();
 	}
+	/**
+	 * ハンドシェークの動作
+	 */
 	private void sendHandshake() {
 		HandshakeData handshakeData = new HandshakeData();
 		// 接続時の動作
@@ -179,6 +194,10 @@ public class Client {
 		// 送信データを作成し、送る
 		sendData(handshakeData);
 	}
+	/**
+	 * ハンドシェークのイベント
+	 * @param handshakeData
+	 */
 	private void handshakeEvent(HandshakeData handshakeData) {
 		JsonData sendData = new JsonData();
 		// そもそものHandshakeと一致するか確認する。一致しなければ落とす。
@@ -197,12 +216,21 @@ public class Client {
 			System.out.println("handshaketoken is ng");
 		}
 	}
+	/**
+	 * できあがったクライアントのモードを応答しておく。
+	 */
 	public void sendMode() {
 		// ClientManagerに自分がどういう立ち回りを実行するべきか問い合わせる。
 		ModeData modeData = new ModeData();
 		modeData.setId(id);
 		modeData.setTarget(target);
 		sendData(modeData);
+	}
+	/**
+	 * クライアントに特定クライアントとの接続をたずねる。
+	 */
+	public void sendConnectTargetData() {
+		
 	}
 	/**
 	 * データを送信する。

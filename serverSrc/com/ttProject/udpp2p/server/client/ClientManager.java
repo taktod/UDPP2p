@@ -12,6 +12,7 @@ import com.ttProject.udpp2p.server.adapter.ServerAdapter;
  * クライアントを管理
  * @author taktod
  */
+@SuppressWarnings("unused")
 public class ClientManager {
 	/** クライアントIDを作成するときの種 */
 	private static Long seed = System.currentTimeMillis();
@@ -176,30 +177,31 @@ public class ClientManager {
 		// 接続先をきめているクライアントの場合は、現在のクライアントセットに対象クライアントがあるか確認。
 		String key = null;
 		Client target = waitingClients.get(client.getId().toString());
-		if(target.getId() == client.getTarget()) {
+		if(target != null && target.getId() == client.getTarget()) {
 			// 自分とつなごうとしてる相手が自分がつなぎたい相手の場合
 			// みつけた相手とつながる。
 			return;
 		}
 		// clientsに自分がつなごうとしているユーザーがいるか確認する。
+		// ここにsynchronizedしておかないとだめ？
 		for(Entry<String, Client> entry : clients.entrySet()) {
 			if(entry.getValue().getId() == client.getTarget()) {
 				// 相手がみつかった。
 				key = entry.getKey();
+				// みつけた相手がほかのユーザーとかち合うとこまるので、clientsから見つけたclientを取り去る。
 				break;
 			}
 		}
 		if(key != null) {
 			// 相手が見つかった場合
 			target = clients.remove(key);
-			// targetとやり取りする。
+			// targetとやり取りする。(*)
 			return;
 		}
 		// なければ自分をwaitingにいれて、システムクライアントにデータを要求する。
 		waitingClients.put(client.getTarget().toString(), client);
 		// なければシステムクライアントに接続相手から接続にくるように要求をだしておく。
 		// システムクライアントにデータを送り、対象クライアントが接続しにくるように促す。
-		
 		// なお、システムメッセージやりとり動作をする上で接続先ユーザーを指定されてもあまり意味がない。(アプリケションレベルでは意味があると思うけど。)
 	}
 	/**
@@ -208,6 +210,19 @@ public class ClientManager {
 	 */
 	private void doClient(Client client) {
 		// 通常クライアントの場合は、適当にみつけたクライアントに接続要求を出す。
+		// まず、waitingClientsに自分宛の接続が存在するか確認する。
+		Client target = waitingClients.get(client.getId().toString()); // 自分と接続したいユーザーがいるか確認する。
+		if(target != null) {
+			// 相手がなにものであろうと自分とつなぎたい相手なのでつなぐ方向で考える。
+			// みつけた相手とつなげる。
+			return;
+		}
+		// 自分宛の接続が存在しない場合は適当にみつけたクライアントと接続する。
+		for(Entry<String, Client> entry : clients.entrySet()) {
+			// 一番はじめにみつけた相手とやり取りを実行する。
+			// ここに処理がきたら、このユーザーと接続できるかもしれないので、処理をすすめる。
+		}
+		// ここまできてしまったということは接続する相手がいないということなので、clientsに自分をいれて待機しておく。
 	}
 	/**
 	 * クライアントの状態を設定しておく

@@ -110,7 +110,7 @@ public class ConnectionData implements Data {
 			}
 		}
 		if(localPort != null) {
-			data.put("localPort", localPort);
+			data.put("localPort", localPort.toString());
 		}
 		if(localAddress != null) {
 			data.put("localAddress", localAddress);
