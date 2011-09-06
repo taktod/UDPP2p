@@ -2,10 +2,13 @@ package com.ttProject.udpp2p.server.client;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.ttProject.junit.annotation.Junit;
+import com.ttProject.junit.annotation.Test;
 import com.ttProject.udpp2p.server.adapter.ServerAdapter;
 
 /**
@@ -203,6 +206,64 @@ public class ClientManager {
 		// なければシステムクライアントに接続相手から接続にくるように要求をだしておく。
 		// システムクライアントにデータを送り、対象クライアントが接続しにくるように促す。
 		// なお、システムメッセージやりとり動作をする上で接続先ユーザーを指定されてもあまり意味がない。(アプリケションレベルでは意味があると思うけど。)
+	}
+	/**
+	 * 内部のデータをつかって動作確認をしておく。
+	 * @return 結果の応答
+	 */
+	@Junit({
+		@Test
+	})
+	public String test() {
+		try {
+			DatagramPacket packet = new DatagramPacket("test".getBytes(), "test".length(), new InetSocketAddress("google.com", 1935));
+			Client client = new Client(packet, 1L);
+			String packetKey = packet.getSocketAddress().toString();
+			final String hogehoge = packetKey;
+			clients.put(packetKey, client);
+			System.out.println(clients);
+			
+			packet = new DatagramPacket("test".getBytes(), "test".length(), new InetSocketAddress("yahoo.com", 1353));
+			client = new Client(packet, 2L);
+			packetKey = packet.getSocketAddress().toString();
+			clients.put(packetKey, client);
+			System.out.println(clients);
+
+			packet = new DatagramPacket("test".getBytes(), "test".length(), new InetSocketAddress("youtube.com", 3513));
+			client = new Client(packet, 3L);
+			packetKey = packet.getSocketAddress().toString();
+			clients.put(packetKey, client);
+			System.out.println(clients);
+			synchronized (clients) {
+				for(Entry<String, Client> entry : clients.entrySet()) {
+					clients.remove(entry.getKey());
+					break;
+				}
+				new Thread(new Runnable() {
+					@Override
+					public void run() {
+						// synchronizedは互いについているところでのみ有用になるっぽい。
+						synchronized(clients) {
+							System.out.println("test start");
+							clients.remove(hogehoge);
+							System.out.println("test end");
+						}
+					}
+				}).start();
+				try {
+					System.out.println("sleep start");
+					Thread.sleep(1000L);
+					System.out.println("sleep end");
+				}
+				catch (Exception e) {
+					e.printStackTrace(System.out);
+				}
+			}
+			System.out.println(clients);
+		}
+		catch (Exception e) {
+		}
+		return "";
 	}
 	/**
 	 * 一般接続の後処理
