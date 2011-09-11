@@ -30,7 +30,7 @@ public class UdpP2pServer implements Runnable {
 	/** 動作用ソケット */
 	private DatagramSocket socket;
 	/** 接続対象サーバー */
-	private SocketAddress server = new InetSocketAddress("49.212.39.17", 12345);
+	private SocketAddress server = new InetSocketAddress("localhost", 12345);
 	/** P2Pやりとり先ターゲット */
 	private SocketAddress target = null;
 	/** 処理アダプター */
