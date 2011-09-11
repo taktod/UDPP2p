@@ -38,7 +38,7 @@ public class UdpP2pServer implements Runnable {
 	/** 最終メッセージやりとり時刻 */
 	private Long lastMessageTime = null;
 	/** ID */
-	private Long id = null;
+	private static Long id = null;
 	/** ローカルネットワークのデータを送信するかどうか？ */
 	private boolean localDataSend = false;
 	/**
@@ -198,6 +198,12 @@ public class UdpP2pServer implements Runnable {
 	 */
 	private void modeEvent(ModeData modeData) {
 		System.out.println(modeData.encode());
+		System.out.println("ここまできた。");
+		// 自分のIDをサーバーから送られてきたIDでうわがきしておく。
+		id = modeData.getId();
+		// 自分のデータをセットして、UDPP2PAdapterに次の接続の処理を行わせる。
+		// とりいそぎ、システム接続→一般接続という流れは必要。
+		// 接続が完了したらここにくることもわすれずに。
 	}
 	/**
 	 * メッセージ受け取り
