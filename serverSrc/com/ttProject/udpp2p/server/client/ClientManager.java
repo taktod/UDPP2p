@@ -15,7 +15,6 @@ import com.ttProject.udpp2p.server.adapter.ServerAdapter;
  * クライアントを管理
  * @author taktod
  */
-@SuppressWarnings("unused")
 public class ClientManager {
 	/** クライアントIDを作成するときの種 */
 	private static Long seed = System.currentTimeMillis();
@@ -75,6 +74,7 @@ public class ClientManager {
 		 */
 		Client client;
 		String packetKey = packet.getSocketAddress().toString();
+		// どこにも登録されていないクライアントの場合というのをつくったほうがいいか？
 		// クライアントとして接続していたことがあるか？
 		client = clients.get(packetKey);
 		if(client != null) {
@@ -85,9 +85,14 @@ public class ClientManager {
 		if(client != null) {
 			return client;
 		}
+		client = waitingClients.get(packetKey);
+		if(client != null) {
+			return client;
+		}
 		// どっちでもなければ新しいクライアント
 		client = new Client(packet, generateId(packet));
 		// あたらしいクライアントIDを付加しておく。
+		// ここで追加してしまうので、あとでクライアントの追加作業を実施するときにひっかかってしまう。(はずせない・・・これを外してしまうと途中のデータのやりとりのときに、処理ができなくなる。clientが拾えなくなる。)
 		clients.put(packetKey, client);
 		connectCount ++;
 		if(connectCount == Long.MAX_VALUE) {
@@ -275,15 +280,47 @@ public class ClientManager {
 		Client target = waitingClients.get(client.getId().toString()); // 自分と接続したいユーザーがいるか確認する。
 		if(target != null) {
 			// 相手がなにものであろうと自分とつなぎたい相手なのでつなぐ方向で考える。
+			System.out.println("found the target with queue...");
+			// waitingClientsからみつけたclientを取り去っておく。接続に失敗し、再度接続したい場合はclientから再度queueをいれてもらえればよい。
+//			waitingClients.remove(target);
 			// みつけた相手とつなげる。
+			doConnectWithClient(client, target);
 			return;
 		}
+		target = null;
+		System.out.println(clients.size());
 		// 自分宛の接続が存在しない場合は適当にみつけたクライアントと接続する。
 		for(Entry<String, Client> entry : clients.entrySet()) {
 			// 一番はじめにみつけた相手とやり取りを実行する。
-			// ここに処理がきたら、このユーザーと接続できるかもしれないので、処理をすすめる。
+			if(client == entry.getValue()) {
+				// 先に自分のクライアントを登録しているので、自分自身がひっかかる可能性がある。
+				System.out.println("that's myself....");
+				continue;
+			}
+			// 自分以外のクライアントがみつかったので、そっちと接続を試みてみればいいはず。
+			System.out.println("found the target with clients list...");
+			target = entry.getValue();
+//			clients.remove(target);
+			break;
 		}
-		// ここまできてしまったということは接続する相手がいないということなので、clientsに自分をいれて待機しておく。
+		if(target == null) {
+			// ここまできてしまったということは接続する相手がいないということなので、clientsに自分をいれて待機しておく。
+			// clientsにはすでに設置済みなので、特にすることなし。
+			System.out.println("not found put on queue...");
+			client.sendMode();
+		}
+		else {
+			// 対象クライアントとの接続実行するようにしておく。
+			doConnectWithClient(client, target);
+		}
+	}
+	/**
+	 * 対象クライアントと接続する準備に入る。
+	 * @param client
+	 * @param target
+	 */
+	private void doConnectWithClient(Client client, Client target) {
+		
 	}
 	/**
 	 * クライアントの状態を設定しておく
@@ -328,7 +365,8 @@ public class ClientManager {
 		}
 		// 同じクライアントからの接続がすでにシステム接続になっているか確認
 		for(Entry<String, Client> element : systemClients.entrySet()) {
-			if(element.getValue().getId() == client.getId()) {
+			// ここの比較はequalsでやらないとうまくいかないらしい。
+			if(element.getValue().getId().longValue() == client.getId().longValue()) {
 				return false;
 			}
 		}

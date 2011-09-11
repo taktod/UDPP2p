@@ -23,7 +23,6 @@ import com.ttProject.udpp2p.library.json.JsonData;
  * それぞれの接続用のインスタンス
  * @author taktod
  */
-@SuppressWarnings("unused")
 public class UdpP2pServer implements Runnable {
 	/** タイムアウト値:5分設定 */
 	private final Long timeout = 300000L;
@@ -34,13 +33,26 @@ public class UdpP2pServer implements Runnable {
 	/** P2Pやりとり先ターゲット */
 	private SocketAddress target = null;
 	/** 処理アダプター */
-	UdpP2pServerAdapter adapter;
+	private UdpP2pServerAdapter adapter;
 	/** 最終メッセージやりとり時刻 */
 	private Long lastMessageTime = null;
 	/** ID */
 	private static Long id = null;
 	/** ローカルネットワークのデータを送信するかどうか？ */
 	private boolean localDataSend = false;
+	/** 接続の種類 */
+	private Byte type = null;
+	
+	public static Long getClientId() {
+		return id;
+	}
+	/**
+	 * システムクライアントであるかどうか
+	 * @return
+	 */
+	public boolean isSystemClient() {
+		return type == (byte)0xFF;
+	}
 	/**
 	 * コンストラクタ
 	 */
@@ -198,10 +210,24 @@ public class UdpP2pServer implements Runnable {
 	 */
 	private void modeEvent(ModeData modeData) {
 		System.out.println(modeData.encode());
-		System.out.println("ここまできた。");
 		// 自分のIDをサーバーから送られてきたIDでうわがきしておく。
 		id = modeData.getId();
-		// 自分のデータをセットして、UDPP2PAdapterに次の接続の処理を行わせる。
+		type = 0x01;
+		if(modeData.getTarget() <= 0) {
+			switch (modeData.getTarget().intValue()) {
+			case -1:
+				type = (byte)0xFF; // システムクライアント
+				break;
+			case 0:
+				type = (byte)0x00; // 接続待ち状態
+				break;
+			default:
+				break;
+			}
+		}
+		adapter.setupNextClient(this);
+		// システム以外のクライアントの場合はその旨を取得しておく。
+		// 自分の状態が決定したら、Adapterに次の処理を問い合わせることにする
 		// とりいそぎ、システム接続→一般接続という流れは必要。
 		// 接続が完了したらここにくることもわすれずに。
 	}

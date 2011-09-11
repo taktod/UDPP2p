@@ -31,12 +31,19 @@ public class Client {
 	private Long id = null;
 	/** Handshake用の情報 */
 	private Long handshakeToken = null;
-	/** UDP check */
+	/** UDP check(udpCheckが完了するまでは、クライアントとの接続を許可しないでおいておく。) */
 	private boolean udpCheck = false;
 	/** UDPHolepunching check */
 	private boolean udpHolePunchingCheck = false;
 	/** 接続状態　-1:システム 0:接続待ち Long:接続相手 */
 	private Long target = null;
+	/**
+	 * UdpCheckが完了している場合はHandshakeが完了しているので、接続可能クライアント扱いにする？
+	 * @return
+	 */
+	public boolean isReadyClient() {
+		return udpCheck;
+	}
 	// 自分がすでに接続済みクライアントデータを送る必要がある。
 	/*
 	 * 先にサーバーに接続ずみクライアント情報をおくった方がいいのか、接続をとりあえず試させて、クライアントごとに、接続済みであるか確認させた方がいいのか・・・
@@ -204,13 +211,15 @@ public class Client {
 		// 送られてきたHandshakeの値をHex化して一致するか確認する。
 		// 一致したらそのクライアントはUDP接続は可能ということ。
 		String token = handshakeData.getStringToken();
+		System.out.println(token);
+		System.out.println(handshakeToken);
 		if(token != null && token.equals(Long.toHexString(handshakeToken))) {
 			System.out.println("handshaketoken is ok");
-			// udp動作成功
-			udpCheck = true;
 			// クライアントの情報を確定する。
 			ClientManager clientManager = ClientManager.getInstance();
 			clientManager.setupClient(this);
+			// udp動作成功
+			udpCheck = true;
 		}
 		else {
 			System.out.println("handshaketoken is ng");
