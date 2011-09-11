@@ -29,10 +29,10 @@ public class ConnectTargetData implements Data {
 	public ConnectTargetData(JsonData data) {
 		this();
 		address = (String)data.get("address");
-		port = (Integer)data.get("port");
-		id = (Long)data.get("id");
+		port = Integer.parseInt((String)data.get("port"));
+		id = Long.parseLong((String)data.get("id"));
 		localAddress = (String)data.get("localAddress");
-		localPort = (Integer)data.get("localPort");
+		localPort = Integer.parseInt((String)data.get("localPort"));
 	}
 	/**
 	 * @return the address

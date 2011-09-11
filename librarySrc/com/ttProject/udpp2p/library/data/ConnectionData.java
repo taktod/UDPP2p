@@ -27,7 +27,7 @@ public class ConnectionData implements Data {
 	public ConnectionData(JsonData data) {
 		this();
 		localAddress = (String)data.get("localAddress");
-		localPort = (Integer)data.get("localPort");
+		localPort = Integer.parseInt((String)data.get("localPort"));
 		if(data.get("id") == null) {
 			return;
 		}
