@@ -19,9 +19,6 @@ public class ClientEntry {
 	 * @throws Exception
 	 */
 	public ClientEntry() throws Exception {
-//		System.out.println(Long.parseLong("34a36d8e8a6fb0a", 16));
-//		UdpP2pServer ups = new UdpP2pServer();
-//		ups.connect();
 		UdpP2pServerAdapter adapter = new UdpP2pServerAdapter();
 		adapter.start();
 	}

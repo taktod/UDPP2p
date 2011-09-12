@@ -13,6 +13,7 @@ import com.ttProject.udpp2p.server.adapter.ServerAdapter;
 
 /**
  * クライアントを管理
+ * (Junitの処理を積極的にいれていくクラス)
  * @author taktod
  */
 public class ClientManager {

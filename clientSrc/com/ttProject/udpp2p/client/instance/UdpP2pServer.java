@@ -21,6 +21,7 @@ import com.ttProject.udpp2p.library.json.JsonData;
  */
 /**
  * それぞれの接続用のインスタンス
+ * (Junitの処理を積極的にいれていくクラス)
  * @author taktod
  */
 public class UdpP2pServer implements Runnable {

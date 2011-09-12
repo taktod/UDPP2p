@@ -6,6 +6,11 @@ import java.util.List;
 import com.ttProject.udpp2p.client.Server;
 import com.ttProject.udpp2p.client.event.TimerEvent;
 
+/**
+ * UdpP2pを実行するアダプター
+ * (Junitの処理を積極的にいれていくクラス)
+ * @author taktod
+ */
 public class UdpP2pServerAdapter implements Server {
 	private final boolean allowLocalConnection = true;
 	private TimerEvent timer;

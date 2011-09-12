@@ -15,6 +15,7 @@ import com.ttProject.udpp2p.library.json.JsonData;
 
 /**
  * 通常のクライアント
+ * (Junitの処理を積極的にいれていくクラス)
  * @author taktod
  */
 public class Client {
