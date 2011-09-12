@@ -18,6 +18,8 @@ import com.ttProject.udpp2p.library.json.JsonData;
  * 中央サーバーに接続してシステムとしてつながり続ける。
  * 指定した接続を実行するために、中央サーバーに接続してつながりを取得する。
  * 適当な接続をもらうために中央サーバーに接続してつながりつづける？
+ * 
+ * 接続がうまくいかないのが長くつづいた場合(中央サーバーから応答がない場合はタイムアウトとしてエラーを応答したいところ。)
  */
 /**
  * それぞれの接続用のインスタンス
@@ -212,6 +214,7 @@ public class UdpP2pServer implements Runnable {
 		System.out.println(modeData.encode());
 		// 自分のIDをサーバーから送られてきたIDでうわがきしておく。
 		id = modeData.getId();
+		// 接続タイプがシステムか待ち状態の場合
 		type = 0x01;
 		if(modeData.getTarget() <= 0) {
 			switch (modeData.getTarget().intValue()) {
@@ -225,11 +228,15 @@ public class UdpP2pServer implements Runnable {
 				break;
 			}
 		}
-		adapter.setupNextClient(this);
-		// システム以外のクライアントの場合はその旨を取得しておく。
+		else {
+			// 接続相手がみつかった場合
+			// 相手のtargetIdと接続して問題ないか確認する。
+			// すでに接続済みの相手の場合はつなげない。
+			// 接続拒否中の相手の場合はつなげない。
+			// これ以上接続をつくらない場合はここで処理を中断
+		}
 		// 自分の状態が決定したら、Adapterに次の処理を問い合わせることにする
-		// とりいそぎ、システム接続→一般接続という流れは必要。
-		// 接続が完了したらここにくることもわすれずに。
+		adapter.setupNextClient(this);
 	}
 	/**
 	 * メッセージ受け取り

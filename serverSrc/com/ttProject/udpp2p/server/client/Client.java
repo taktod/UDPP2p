@@ -17,7 +17,6 @@ import com.ttProject.udpp2p.library.json.JsonData;
  * 通常のクライアント
  * @author taktod
  */
-@SuppressWarnings("unused")
 public class Client {
 	/** タイムアウト値:5分設定 */
 	private final Long timeout = 300000L;
@@ -206,7 +205,7 @@ public class Client {
 	 * @param handshakeData
 	 */
 	private void handshakeEvent(HandshakeData handshakeData) {
-		JsonData sendData = new JsonData();
+//		JsonData sendData = new JsonData();
 		// そもそものHandshakeと一致するか確認する。一致しなければ落とす。
 		// 送られてきたHandshakeの値をHex化して一致するか確認する。
 		// 一致したらそのクライアントはUDP接続は可能ということ。

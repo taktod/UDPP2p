@@ -3,8 +3,11 @@ package com.ttProject.udpp2p.server.client;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.ttProject.junit.annotation.Junit;
@@ -22,11 +25,15 @@ public class ClientManager {
 	private static ClientManager instance = null;
 
 	/** 待機中の通常クライアント */
-	private Map<String, Client> clients = null; // 接続に利用したパケットキー -> Client
+	private Map<String, Client> normalClients = null; // 接続に利用したパケットキー -> Client
 	/** 接続中のシステムクライアント */
 	private Map<String, Client> systemClients = null; // 接続に利用したパケットキー -> Client
 	/** 特定クライアントと接続しようとしているユーザーのデータ */
 	private Map<String, Client> waitingClients = null; // つなぎたいClientId -> Client
+	/** 接続待ち合わせが完了したクライアント情報万が一gcがはしっても消滅しないようにするために保持しておこうか？ */
+	private Set<Client> clientSet = null;
+	/** すべてのクライアント */
+	private Map<String, Client> clients = null; // 接続に利用したパケットキー -> Client
 	/** 接続ユーザー数カウンター */
 	private Long connectCount = 0L;
 	/** システム接続の最大接続数予定 */
@@ -37,9 +44,13 @@ public class ClientManager {
 	 * コンストラクタ
 	 */
 	private ClientManager() {
-		clients = new ConcurrentHashMap<String, Client>();
+		normalClients = new ConcurrentHashMap<String, Client>();
 		systemClients = new ConcurrentHashMap<String, Client>();
 		waitingClients = new ConcurrentHashMap<String, Client>();
+		// clientsをWeakHashMapにしておくことで、削除されてしまったら即使えなくなるようにしておく。
+		clients = new WeakHashMap<String, Client>();
+		// つかうかどうかわからない。
+//		clientSet = new HashSet<Client>();
 	}
 	/**
 	 * シングルトンインスタンス取得
@@ -74,22 +85,12 @@ public class ClientManager {
 		 */
 		Client client;
 		String packetKey = packet.getSocketAddress().toString();
-		// どこにも登録されていないクライアントの場合というのをつくったほうがいいか？
-		// クライアントとして接続していたことがあるか？
+		// clientsから情報を引き出す。
 		client = clients.get(packetKey);
 		if(client != null) {
 			return client;
 		}
-		client = systemClients.get(packetKey);
-		// システムクライアントであるか？
-		if(client != null) {
-			return client;
-		}
-		client = waitingClients.get(packetKey);
-		if(client != null) {
-			return client;
-		}
-		// どっちでもなければ新しいクライアント
+		// 情報の引き出しができない場合はあたらしい接続なので、そっちの処理をおこなう。
 		client = new Client(packet, generateId(packet));
 		// あたらしいクライアントIDを付加しておく。
 		// ここで追加してしまうので、あとでクライアントの追加作業を実施するときにひっかかってしまう。(はずせない・・・これを外してしまうと途中のデータのやりとりのときに、処理ができなくなる。clientが拾えなくなる。)
@@ -115,15 +116,15 @@ public class ClientManager {
 	public void pingJob() {
 		// 通常クライアント
 		Map<String, Client> nextClients = new ConcurrentHashMap<String, Client>();
-		synchronized(clients) {
+		synchronized(normalClients) {
 			// pingの処理
-			for(Entry<String, Client> entry : clients.entrySet()) {
+			for(Entry<String, Client> entry : normalClients.entrySet()) {
 				if(entry.getValue().sendPing(adapter.getSocket())) {
 					nextClients.put(entry.getKey(), entry.getValue());
 				}
 			}
 		}
-		clients = nextClients;
+		normalClients = nextClients;
 		// システムクライアント
 		nextClients = new ConcurrentHashMap<String, Client>();
 		synchronized (systemClients) {
@@ -173,6 +174,8 @@ public class ClientManager {
 	 * @param client
 	 */
 	private void doSystemClient(Client client) {
+		// システムクライアントとして登録しておく。
+		systemClients.put(client.getAddressKey(), client);
 		// システムクライアントの場合はクライアントに情報を送り返しておく。
 		// ここでなにかするということはなにもなし。
 		client.sendMode();
@@ -192,7 +195,7 @@ public class ClientManager {
 		}
 		// clientsに自分がつなごうとしているユーザーがいるか確認する。
 		// ここにsynchronizedしておかないとだめ？
-		for(Entry<String, Client> entry : clients.entrySet()) {
+		for(Entry<String, Client> entry : normalClients.entrySet()) {
 			if(entry.getValue().getId() == client.getTarget()) {
 				// 相手がみつかった。
 				key = entry.getKey();
@@ -202,7 +205,7 @@ public class ClientManager {
 		}
 		if(key != null) {
 			// 相手が見つかった場合
-			target = clients.remove(key);
+			target = normalClients.remove(key);
 			// targetとやり取りする。(*)
 			return;
 		}
@@ -211,64 +214,6 @@ public class ClientManager {
 		// なければシステムクライアントに接続相手から接続にくるように要求をだしておく。
 		// システムクライアントにデータを送り、対象クライアントが接続しにくるように促す。
 		// なお、システムメッセージやりとり動作をする上で接続先ユーザーを指定されてもあまり意味がない。(アプリケションレベルでは意味があると思うけど。)
-	}
-	/**
-	 * 内部のデータをつかって動作確認をしておく。
-	 * @return 結果の応答
-	 */
-	@Junit({
-		@Test
-	})
-	public String test() {
-		try {
-			DatagramPacket packet = new DatagramPacket("test".getBytes(), "test".length(), new InetSocketAddress("google.com", 1935));
-			Client client = new Client(packet, 1L);
-			String packetKey = packet.getSocketAddress().toString();
-			clients.put(packetKey, client);
-			System.out.println(clients);
-			
-			packet = new DatagramPacket("test".getBytes(), "test".length(), new InetSocketAddress("yahoo.com", 1353));
-			client = new Client(packet, 2L);
-			packetKey = packet.getSocketAddress().toString();
-			final String hogehoge = packetKey;
-			clients.put(packetKey, client);
-			System.out.println(clients);
-
-			packet = new DatagramPacket("test".getBytes(), "test".length(), new InetSocketAddress("youtube.com", 3513));
-			client = new Client(packet, 3L);
-			packetKey = packet.getSocketAddress().toString();
-			clients.put(packetKey, client);
-			System.out.println(clients);
-			synchronized (clients) {
-				new Thread(new Runnable() {
-					@Override
-					public void run() {
-						// synchronizedは互いについているところでのみ有用になるっぽい。
-//						synchronized(clients) {
-							System.out.println("test start");
-							clients.remove(hogehoge);
-							System.out.println("test end");
-//						}
-					}
-				}).start();
-				for(Entry<String, Client> entry : clients.entrySet()) {
-					clients.remove(entry.getKey());
-					break;
-				}
-				try {
-					System.out.println("sleep start");
-					Thread.sleep(1000L);
-					System.out.println("sleep end");
-				}
-				catch (Exception e) {
-					e.printStackTrace(System.out);
-				}
-			}
-			System.out.println(clients);
-		}
-		catch (Exception e) {
-		}
-		return "";
 	}
 	/**
 	 * 一般接続の後処理
@@ -282,15 +227,15 @@ public class ClientManager {
 			// 相手がなにものであろうと自分とつなぎたい相手なのでつなぐ方向で考える。
 			System.out.println("found the target with queue...");
 			// waitingClientsからみつけたclientを取り去っておく。接続に失敗し、再度接続したい場合はclientから再度queueをいれてもらえればよい。
-//			waitingClients.remove(target);
+			waitingClients.remove(target);
 			// みつけた相手とつなげる。
 			doConnectWithClient(client, target);
 			return;
 		}
 		target = null;
-		System.out.println(clients.size());
+		System.out.println(normalClients.size());
 		// 自分宛の接続が存在しない場合は適当にみつけたクライアントと接続する。
-		for(Entry<String, Client> entry : clients.entrySet()) {
+		for(Entry<String, Client> entry : normalClients.entrySet()) {
 			// 一番はじめにみつけた相手とやり取りを実行する。
 			if(client == entry.getValue()) {
 				// 先に自分のクライアントを登録しているので、自分自身がひっかかる可能性がある。
@@ -299,14 +244,15 @@ public class ClientManager {
 			}
 			// 自分以外のクライアントがみつかったので、そっちと接続を試みてみればいいはず。
 			System.out.println("found the target with clients list...");
+			// みつけて操作する前にループからぬければConcurretModificationExceptionの影響をうけない。
 			target = entry.getValue();
-//			clients.remove(target);
 			break;
 		}
 		if(target == null) {
 			// ここまできてしまったということは接続する相手がいないということなので、clientsに自分をいれて待機しておく。
 			// clientsにはすでに設置済みなので、特にすることなし。
 			System.out.println("not found put on queue...");
+			normalClients.put(client.getAddressKey(), client);
 			client.sendMode();
 		}
 		else {
@@ -320,7 +266,14 @@ public class ClientManager {
 	 * @param target
 	 */
 	private void doConnectWithClient(Client client, Client target) {
-		
+		// sendModeで、クライアント両方に互いの接続をおしえておく。
+		// 互いに接続相手のIDをいれておく。
+		client.setTarget(target.getId());
+		target.setTarget(client.getId());
+		// 状態をクライアントの接続元に送信しておく。
+		client.sendMode();
+		target.sendMode();
+		// ここで終わり。
 	}
 	/**
 	 * クライアントの状態を設定しておく
@@ -343,13 +296,13 @@ public class ClientManager {
 		}
 		if(target == -1L) {
 			// システムクライアントの場合
-			clients.remove(client.getAddressKey());
+			normalClients.remove(client.getAddressKey());
 			systemClients.put(client.getAddressKey(), client);
 			return;
 		}
 		if(target > 0L) {
 			// 接続先が設定されている場合はqueueに設定しておく。
-			clients.remove(client.getAddressKey());
+			normalClients.remove(client.getAddressKey());
 			waitingClients.put(target.toString(), client);
 		}
 	}
