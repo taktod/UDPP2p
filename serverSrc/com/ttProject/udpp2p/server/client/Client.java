@@ -17,7 +17,6 @@ import com.ttProject.udpp2p.library.json.JsonData;
  * 通常のクライアント
  * @author taktod
  */
-@SuppressWarnings("unused")
 public class Client {
 	/** タイムアウト値:5分設定 */
 	private final Long timeout = 300000L;

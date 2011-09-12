@@ -65,6 +65,10 @@ public class ServerAdapter {
 		Client client = clientManager.getTargetClient(packet);
 		client.receiveMessage(packet);
 	}
+	/**
+	 * ソケットデータの取得
+	 * @return
+	 */
 	public DatagramSocket getSocket() {
 		return socket.getSocket();
 	}

@@ -18,6 +18,9 @@ public class TimerEvent extends Thread {
 	public TimerEvent(ServerAdapter adapter) {
 		this.adapter = adapter;
 	}
+	/**
+	 * タイマー処理
+	 */
 	@Override
 	public void run() {
 		while(true) {
@@ -26,6 +29,8 @@ public class TimerEvent extends Thread {
 				adapter.scheduledJob();
 			}
 			catch (Exception e) {
+				// 停止するには、Threadのinterruptedではなく、プロセスのkillしかない。
+				// 改善するかはあとで考えることにしたい。
 			}
 		}
 	}

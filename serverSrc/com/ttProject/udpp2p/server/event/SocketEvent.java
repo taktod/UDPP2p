@@ -59,6 +59,10 @@ public class SocketEvent extends Thread {
 			adapter.dataJob(packet);
 		}
 	}
+	/**
+	 * ソケットデータの取得
+	 * @return
+	 */
 	public DatagramSocket getSocket() {
 		return socket;
 	}

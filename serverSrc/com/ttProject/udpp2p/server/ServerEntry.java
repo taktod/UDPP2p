@@ -8,6 +8,7 @@ import com.ttProject.udpp2p.server.adapter.ServerAdapter;
  */
 public class ServerEntry {
 	/**
+	 * メインエントリー
 	 * @param args
 	 */
 	public static void main(String[] args) {
