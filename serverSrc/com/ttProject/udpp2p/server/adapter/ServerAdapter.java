@@ -7,7 +7,6 @@ import com.ttProject.udpp2p.server.client.Client;
 import com.ttProject.udpp2p.server.client.ClientManager;
 import com.ttProject.udpp2p.server.event.SocketEvent;
 import com.ttProject.udpp2p.server.event.TimerEvent;
-import com.ttProject.udpp2p.server.jmx.JMXAgent;
 
 /*
  * サーバーの仕事
@@ -37,7 +36,6 @@ public class ServerAdapter {
 	 * サーバーを起動しておく。
 	 */
 	public void start() {
-		JMXAgent.init();
 		try {
 			timer = new TimerEvent(this);
 			timer.start();
