@@ -28,6 +28,8 @@ public class ClientManager {
 	private Map<String, Client> systemClients = null; // 接続に利用したパケットキー -> Client
 	/** 特定クライアントと接続しようとしているユーザーのデータ */
 	private Map<String, Client> waitingClients = null; // つなぎたいClientId -> Client
+	/** 上記に当てはまらないクライアント */
+	private Map<String, Client> otherClients = null; // 接続準備状態になっているクライアント
 	/** 接続ユーザー数カウンター */
 	private Long connectCount = 0L;
 	/** システム接続の最大接続数予定 */
@@ -83,10 +85,6 @@ public class ClientManager {
 		}
 		client = systemClients.get(packetKey);
 		// システムクライアントであるか？
-		if(client != null) {
-			return client;
-		}
-		client = waitingClients.get(packetKey);
 		if(client != null) {
 			return client;
 		}
